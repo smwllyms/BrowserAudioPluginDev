@@ -1,0 +1,20 @@
+body {
+    margin: 0;
+    height: 100vh;
+    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+textarea {
+    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    padding:0; border: 0;
+    box-sizing: content-box;
+    height:100%;
+}
+#oscillators {
+    background-color: beige;
+    height:20%;
+}
+#code {
+    background-color: cyan;
+    text-align: center;
+    height:80%;
+}

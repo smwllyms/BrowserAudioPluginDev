@@ -1,0 +1,15 @@
+#user_func {
+    width:90%;
+    height:80%;
+    vertical-align: top;
+}
+#compile {
+    background-color: green;
+    color:white;
+    display: block;
+    cursor: pointer;
+    height:20%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

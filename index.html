@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Page Title</title>
+    <link href="./css/main.css" rel="stylesheet">
+    <link href="./css/audionode.css" rel="stylesheet">
+    <link href="./css/browserprogram.css" rel="stylesheet">
+</head>
+<body>
+    <div id="oscillators">
+
+    </div>
+    <div id="code">
+        <textarea id="user_func"></textarea>
+        <a id="compile">Compile</a>
+    </div>
+</body>
+</html>
+<script>
+
+    // Some globals
+    let currentPlugin, audioctx, func_text;
+
+    function main() {
+
+        // Create Program Browser
+        func_text = document.getElementById("user_func");
+        let btn = document.getElementById("compile");
+
+        // Define our callback for updating audio plugin
+        const callback = function (f) {
+            // Set our processors user funcd
+            let fs = f.toString();
+            let i = fs.indexOf("{") + 1;
+            s = fs.substring(i).slice(0,-1);
+            let msg = {};
+            msg.type = "code";
+            msg.data = s;
+            currentPlugin.processor.port.postMessage(msg);
+        }
+
+        import("./js/util/programbrowser.js").then(({default:ProgramBrowser})=>{
+            // Create a new program browser
+            let prog = new ProgramBrowser(
+                callback, btn, func_text, null, null);
+
+            let oscs = document.getElementById("oscillators");
+
+            import("./js/inc/audiolib.js").then(({SineOsc, EffectPlugin, DestinationNode})=>{audioctx.audioWorklet
+            .addModule("./js/audio/audioprocessor.js").then(()=>{
+                // Create oscillator (We set destination to our processor)
+                let osc = new SineOsc(oscs, audioctx, "sine");
+                // Create a demo plugin
+                let plugin = new EffectPlugin(oscs, audioctx);
+                plugin.elem.style.left = "300px";
+                // Create a destination
+                let dest = new DestinationNode(oscs, audioctx);
+                dest.elem.style.left = "600px";
+                // Connect them manually
+                // Set our "current plugin"
+                currentPlugin = plugin;
+            })});
+        });
+    }
+
+    audioctx = new AudioContext();
+    main();
+
+    // For the user required Audio Context thing
+    document.addEventListener("click", ()=>audioctx.resume());
+
+    // Default fill
+    func_text.innerHTML = "// Number of Inputs&#13;&#10;\
+for (i = 0; i < inputs.length; i++)&#13;&#10;\
+{&#13;&#10;\
+    const input = inputs[i];&#13;&#10;\
+    const output = outputs[i];&#13;&#10;\
+    // Number of channels&#13;&#10;\
+    for (j = 0; j < input.length; j++)&#13;&#10;\
+    {&#13;&#10;\
+        // Play with samples here!&#13;&#10;\
+        let len = input[j].length;&#13;&#10;\
+        for (k = 0; k < len; k++)&#13;&#10;\
+        {&#13;&#10;\
+            output[j][k] = input[j][k];&#13;&#10;\
+        }&#13;&#10;\
+    }&#13;&#10;\
+}&#13;&#10;";
+
+</script>
