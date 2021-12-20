@@ -35,7 +35,8 @@ export default class ProgramBrowser {
             try {
                 // Log result
                 // myLog(new Function(s)());
-                callback(new Function(s));
+                // callback(new Function(s));
+                callback(s);
             }
             catch (err) {
                 // Log errors
@@ -49,7 +50,10 @@ export default class ProgramBrowser {
         // On click load demo button
         function loadDemo() {
             args.value = 'a1="Sam", a2=3';
-            fn.value = 'function sqr(n) { return n*n; }\n\nfunction demo(name, num) {\n    return name + " has " + sqr(num) + " apples!";\n}\n\nconsole.log("You can do this, too!");\n\n// Return the value to see output!\nreturn demo(a1,a2);';
+            loadProgram('function sqr(n) { return n*n; }\n\nfunction demo(name, num) {\n    return name + " has " + sqr(num) + " apples!";\n}\n\nconsole.log("You can do this, too!");\n\n// Return the value to see output!\nreturn demo(a1,a2);');
+        }
+        function loadProgram(s) {
+            fn.value = s;
         }
 
         // On click clear button

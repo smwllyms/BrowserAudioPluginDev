@@ -10,6 +10,11 @@
     min-height: 75px;
     height: 1px;
     text-align: center;
+    user-drag: none;
+    user-select: none;
+}
+.selected_node {
+    box-shadow: 0 0 0 3px darkred;
 }
 .audionode label {
     margin-right: 10px;
@@ -23,7 +28,6 @@
 }
 .ports {
     width: 100%;
-    height: 1px;
 }
 .port {
     border-radius: 10px;
@@ -31,7 +35,9 @@
     height:20px;
     background:lightseagreen;
     position: relative;
+    cursor: pointer;
 }
+.port:hover { background: orange;}
 .connectArrow {
     background:black;
     transform-origin : top left;

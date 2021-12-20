@@ -35,4 +35,8 @@ export class EffectPlugin extends AudioNode {
         this.processor = new AudioWorkletNode(context, "audio-processor");
 
     }
+
+    setProgram(s) {
+        this.program = s;
+    }
 }

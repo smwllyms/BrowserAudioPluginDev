@@ -1,3 +1,21 @@
+function drawLine(connectArrow, x1, y1, x2, y2) {
+    if (x2 < x1) {
+        let tmp;
+        tmp = x2 ; x2 = x1 ; x1 = tmp;
+        tmp = y2 ; y2 = y1 ; y1 = tmp;
+    }
+
+    let lineLength = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    let m = (y2 - y1) / (x2 - x1);
+
+    let deg = Math.atan(m) * 180 / Math.PI;
+
+    connectArrow.style.transform = "rotate(" + deg + "deg)";
+    connectArrow.style.width = lineLength + "px";
+    connectArrow.style.top = y1 + "px";
+    connectArrow.style.left = x1 + "px";
+}
+
 export default class AudioNode {
     constructor(parentDOM, context, title) {
         // HTML
@@ -42,8 +60,6 @@ export default class AudioNode {
 
         // Add to parent elem
         parentDOM.appendChild(this.elem);
-        // Get our first positions
-        this.recalculatePos();
         let me = this;
 
         // Allow for movement
@@ -69,8 +85,10 @@ export default class AudioNode {
         });
         document.documentElement.addEventListener("mousemove", (e)=>{
             if (this.movingState === "translating") {
-                this.elem.style.left = e.x - this.elem.getBoundingClientRect().width / 3 + "px";
-                this.elem.style.top =  e.y - this.elem.getBoundingClientRect().height / 8 + "px";
+                // this.elem.style.left = e.x - this.elem.getBoundingClientRect().width / 3 + "px";
+                // this.elem.style.top =  e.y - this.elem.getBoundingClientRect().height / 8 + "px";
+                this.setPosition( e.x - this.elem.getBoundingClientRect().width / 3,
+                                e.y - this.elem.getBoundingClientRect().height / 8);
                 this.recalculatePos();
             }
         })
@@ -89,6 +107,11 @@ export default class AudioNode {
 
         // Audio Context
         this.ctx = context;
+
+        // Set our initial port positions
+        // Get our first positions
+        this.refreshGUI();
+        this.recalculatePos();
     }
 
     getPortPos(port){
@@ -156,21 +179,7 @@ export default class AudioNode {
                 let x2 = e.x - myRect.x + x1;
                 let y2 = e.y - myRect.y + y1;
 
-                if (x2 < x1) {
-                    let tmp;
-                    tmp = x2 ; x2 = x1 ; x1 = tmp;
-                    tmp = y2 ; y2 = y1 ; y1 = tmp;
-                }
-            
-                let lineLength = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-                let m = (y2 - y1) / (x2 - x1);
-            
-                let deg = Math.atan(m) * 180 / Math.PI;
-
-                connectArrow.style.transform = "rotate(" + deg + "deg)";
-                connectArrow.style.width = lineLength + "px";
-                connectArrow.style.top = y1 + "px";
-                connectArrow.style.left = x1 + "px";
+                drawLine(connectArrow, x1, y1, x2, y2);
             }
             else if (connectArrow.movingState === "moving") {
                 if (connectArrow.connection == null) {
@@ -186,21 +195,7 @@ export default class AudioNode {
                 let x2 = otherRect.x - myRect.x + x1;
                 let y2 = otherRect.y - myRect.y + y1;
 
-                if (x2 < x1) {
-                    let tmp;
-                    tmp = x2 ; x2 = x1 ; x1 = tmp;
-                    tmp = y2 ; y2 = y1 ; y1 = tmp;
-                }
-            
-                let lineLength = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-                let m = (y2 - y1) / (x2 - x1);
-            
-                let deg = Math.atan(m) * 180 / Math.PI;
-
-                connectArrow.style.transform = "rotate(" + deg + "deg)";
-                connectArrow.style.width = lineLength + "px";
-                connectArrow.style.top = y1 + "px";
-                connectArrow.style.left = x1 + "px";
+                drawLine(connectArrow, x1, y1, x2, y2);
             }
         });
         this.portOut.appendChild(connectArrow);
@@ -265,5 +260,38 @@ export default class AudioNode {
                 connectArrow = null;
             }
         }
+    }
+
+    setBoundaryElem(elem) {
+        this.boundaryElem = elem;
+        let rect = elem.getBoundingClientRect();
+        let myRect = this.elem.getBoundingClientRect();
+        this.boundary = {};
+        this.boundary.xMin = rect.x;
+        this.boundary.yMin = rect.y;
+        this.boundary.xMax = rect.x + rect.width - myRect.width;
+        this.boundary.yMax = rect.y + rect.height - myRect.height;
+
+    }
+
+    setPosition(x, y) {
+        if (!this.boundary) {
+            this.elem.style.left = x + "px";
+            this.elem.style.top = y + "px";
+            return;
+        }
+        // Recheck for change in size
+        this.setBoundaryElem(this.boundaryElem);
+        if (x > this.boundary.xMin && x < this.boundary.xMax) {
+            this.elem.style.left = x + "px";
+        }
+        if (y > this.boundary.yMin && y < this.boundary.yMax) {
+            this.elem.style.top = y + "px";
+        }
+    }
+
+    refreshGUI() {
+        let y = this.elem.getBoundingClientRect().height;
+        this.ports.style.marginTop = (-y/2 + 5) + "px";
     }
 }

@@ -7,62 +7,160 @@
     <link href="./css/main.css" rel="stylesheet">
     <link href="./css/audionode.css" rel="stylesheet">
     <link href="./css/browserprogram.css" rel="stylesheet">
+    <link href="./css/menu.css" rel="stylesheet">
 </head>
 <body>
+    <div id="menu">
+        <a id="site_title">AudioPluginDev</a>
+        <a id="create" href="#create_node">
+            <div id="plus_svg"></div>
+            <div class="menu_lowered">Add a node...</div>
+        </a>
+    </div>
     <div id="oscillators">
 
     </div>
     <div id="code">
+        <div id="info">
+            <h2 style="color: gray;margin-right: 20px;">Selected: </h2> <h2 id="prog_name">Program</h2>
+        </div>
         <textarea id="user_func"></textarea>
-        <a id="compile">Compile</a>
+        <br/>
+        <div class="btn_ctr">
+            <a id="compile" class="btn">Compile</a>
+            <a id="demo" class = "btn" onclick="loadDemo(currentPlugin)">Load Demo</a>
+        </div>
     </div>
 </body>
 </html>
 <script>
 
     // Some globals
-    let currentPlugin, audioctx, func_text;
+    let currentPlugin, audioctx, func_text, name_text;
+
+    const loadDemo = function(plugin) {
+        // Default fill
+        func_text.value = "// Number of Inputs\n\
+    for (i = 0; i < inputs.length; i++)\n\
+    {\n\
+        const input = inputs[i];\n\
+        const output = outputs[i];\n\
+        // Number of channels\n\
+        for (j = 0; j < input.length; j++)\n\
+        {\n\
+            // Play with samples here!\n\
+            let len = input[j].length;\n\
+            for (k = 0; k < len; k++)\n\
+            {\n\
+                output[j][k] = input[j][k];\n\
+            }\n\
+        }\n\
+    }\n";
+    }
+
+    const deselectNode = function() {
+        if (currentPlugin.metaType == "effect") {
+            currentPlugin.setProgram(func_text.value);
+        }
+        currentPlugin.elem.classList.remove("selected_node");
+    }
+
+    const selectNode = function(node) {
+        deselectNode();
+        node.elem.classList.add("selected_node");
+        if (node.metaType == "effect" && node.program !== undefined) {
+            func_text.value = node.program;
+        }
+        else func_text.value = "";
+        name_text.innerText = node.title.innerText;
+        currentPlugin = node;
+    }
 
     function main() {
 
-        // Create Program Browser
-        func_text = document.getElementById("user_func");
-        let btn = document.getElementById("compile");
+        import("./js/inc/req.js").then((req)=>{audioctx.audioWorklet
+        .addModule("./js/audio/audioprocessor.js").then(()=>{
 
-        // Define our callback for updating audio plugin
-        const callback = function (f) {
-            // Set our processors user funcd
-            let fs = f.toString();
-            let i = fs.indexOf("{") + 1;
-            s = fs.substring(i).slice(0,-1);
-            let msg = {};
-            msg.type = "code";
-            msg.data = s;
-            currentPlugin.processor.port.postMessage(msg);
-        }
+            // Get imports
+            let m = req.exports,
+            Oscillator = m.Oscillator,
+            EffectPlugin = m.EffectPlugin,
+            DestinationNode = m.DestinationNode,
+            ProgramBrowser = m.ProgramBrowser;
 
-        import("./js/util/programbrowser.js").then(({default:ProgramBrowser})=>{
             // Create a new program browser
+            func_text = document.getElementById("user_func");
+            name_text = document.getElementById("prog_name");
+            let btn = document.getElementById("compile");
+
+            // Define our callback for updating audio plugin
+            const callback = function (f) {
+                // Set our processors user func
+                let msg = {};
+                msg.type = "code";
+                msg.data = f;
+                // Compile
+                currentPlugin.processor.port.postMessage(msg);
+            }
+
             let prog = new ProgramBrowser(
                 callback, btn, func_text, null, null);
 
             let oscs = document.getElementById("oscillators");
 
-            import("./js/inc/audiolib.js").then(({SineOsc, EffectPlugin, DestinationNode})=>{audioctx.audioWorklet
-            .addModule("./js/audio/audioprocessor.js").then(()=>{
-                // Create oscillator (We set destination to our processor)
-                let osc = new SineOsc(oscs, audioctx, "sine");
-                // Create a demo plugin
-                let plugin = new EffectPlugin(oscs, audioctx);
-                plugin.elem.style.left = "300px";
-                // Create a destination
-                let dest = new DestinationNode(oscs, audioctx);
-                dest.elem.style.left = "600px";
-                // Connect them manually
-                // Set our "current plugin"
-                currentPlugin = plugin;
-            })});
-        });
+            // For creating a node
+            let nodes = [];
+            var numNodes = 0;
+            const createNode = function(type, options) {
+                let node;
+                // Create the desired type
+                switch (type) {
+                    case "osc":
+                        let oscType = "sine";
+                        if (options && options.oscType) oscType = options.oscType;
+                        node = new Oscillator(oscs, audioctx, oscType);
+                        break;
+                    case "effect":
+                        node = new EffectPlugin(oscs, audioctx);
+                        break;
+                    case "dest":
+                        node = new DestinationNode(oscs, audioctx);
+                        break;
+                    default: node = new EffectPlugin(oscs, audioctx);
+                        break;
+                }
+                // Set the boundary
+                node.setBoundaryElem(oscs);
+                // If a position, translate it
+                if (options && options.position) {
+                    node.setPosition(options.position.x, options.position.y);
+                }
+                // Set an id
+                node.id = numNodes++;
+                nodes.push(node);
+                // Set selection callback
+                node.elem.addEventListener("mousedown", ()=>selectNode(node));
+
+                return node;
+            }
+            
+            // Create oscillator (We set destination to our processor)
+            createNode("osc", {oscType:"sawtooth"});
+            // Create a demo plugin
+            let pos = {}; pos.x = 300; pos.y = 0;
+            createNode("effect", {position:pos});
+            // Set our current plugin
+            pos.x = 600;
+            currentPlugin = createNode("effect", {position:pos});
+            // Create a destination
+            pos.x = 900;
+            createNode("dest", {position:pos});
+
+            // We can connect them manually
+            selectNode(currentPlugin);
+            loadDemo(currentPlugin);
+            callback(user_func.value);
+        })});
     }
 
     audioctx = new AudioContext();
@@ -70,23 +168,5 @@
 
     // For the user required Audio Context thing
     document.addEventListener("click", ()=>audioctx.resume());
-
-    // Default fill
-    func_text.innerHTML = "// Number of Inputs&#13;&#10;\
-for (i = 0; i < inputs.length; i++)&#13;&#10;\
-{&#13;&#10;\
-    const input = inputs[i];&#13;&#10;\
-    const output = outputs[i];&#13;&#10;\
-    // Number of channels&#13;&#10;\
-    for (j = 0; j < input.length; j++)&#13;&#10;\
-    {&#13;&#10;\
-        // Play with samples here!&#13;&#10;\
-        let len = input[j].length;&#13;&#10;\
-        for (k = 0; k < len; k++)&#13;&#10;\
-        {&#13;&#10;\
-            output[j][k] = input[j][k];&#13;&#10;\
-        }&#13;&#10;\
-    }&#13;&#10;\
-}&#13;&#10;";
 
 </script>

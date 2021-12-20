@@ -39,4 +39,4 @@ class Oscillator extends AudioNode {
     }
 }
 
-export default Oscillator;
+export { Oscillator };
