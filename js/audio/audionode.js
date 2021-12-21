@@ -30,6 +30,7 @@ export default class AudioNode {
         this.exitBtn = document.createElement("div");
         this.exitBtn.classList += "exit_btn";
         this.exitBtn.addEventListener("click", ()=>this.deleteNode(this));
+        this.exitBtn.onmousedown = function(e){e.stopPropagation();};
         this.grabber.appendChild(this.exitBtn);
 
         // Add label
