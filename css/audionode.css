@@ -57,3 +57,22 @@
 .grabber:hover {
     cursor:move;
 }
+.exit_btn {
+    background:black;
+    transform: rotate(45deg);
+    border-radius: 10px;
+    width:20px;
+    height:20px;
+    float:right;
+    filter: hue-rotate(45deg);
+    cursor:pointer;
+}
+.exit_btn::after {
+    background: url("../svg/plus.svg");
+    display: block;
+    content:"";
+    filter: brightness(50%) sepia(400%) saturate(4) hue-rotate(290deg);
+    width:20px;
+    height:20px;
+    z-index: 2;
+}

@@ -9,7 +9,8 @@ export class DestinationNode extends AudioNode {
         // Our destination
         this.processor = context.destination;
 
-        // We don't want an out port
+        // We don't want an out port or delete
         this.ports.removeChild(this.portOut);
+        this.grabber.removeChild(this.exitBtn);
     }
 }

@@ -15,6 +15,10 @@
         <a id="create" href="#create_node">
             <div id="plus_svg"></div>
             <div class="menu_lowered">Add a node...</div>
+            <ul id="add_node">
+                <li onclick="createNode('osc')">Oscillator</li>
+                <li onclick="createNode('effect')">Effect Processor</li>
+            </ul>
         </a>
     </div>
     <div id="oscillators">
@@ -36,33 +40,39 @@
 <script>
 
     // Some globals
-    let currentPlugin, audioctx, func_text, name_text;
+    let currentPlugin, audioctx, func_text, name_text, createNode;
 
     const loadDemo = function(plugin) {
         // Default fill
-        func_text.value = "// Number of Inputs\n\
-    for (i = 0; i < inputs.length; i++)\n\
+        func_text.value = "void process(float *inputs, float *outputs)\n\
+{\n\
+    // Number of Inputs\n\
+    for (int i = 0; i < inputs.length; i++)\n\
     {\n\
-        const input = inputs[i];\n\
-        const output = outputs[i];\n\
+        float[] input = inputs[i];\n\
+        float[] output = outputs[i];\n\
         // Number of channels\n\
-        for (j = 0; j < input.length; j++)\n\
+        for (int j = 0; j < input.length; j++)\n\
         {\n\
             // Play with samples here!\n\
-            let len = input[j].length;\n\
-            for (k = 0; k < len; k++)\n\
+            int len = input[j].length;\n\
+            for (int k = 0; k < len; k++)\n\
             {\n\
                 output[j][k] = input[j][k];\n\
             }\n\
         }\n\
-    }\n";
+    }\n\
+}\n";
     }
 
     const deselectNode = function() {
+        if (!currentPlugin) return;
         if (currentPlugin.metaType == "effect") {
             currentPlugin.setProgram(func_text.value);
         }
         currentPlugin.elem.classList.remove("selected_node");
+        name_text.innerText = "None";
+        currentPlugin = null;
     }
 
     const selectNode = function(node) {
@@ -111,7 +121,7 @@
             // For creating a node
             let nodes = [];
             var numNodes = 0;
-            const createNode = function(type, options) {
+            createNode = function(type, options) {
                 let node;
                 // Create the desired type
                 switch (type) {
@@ -140,20 +150,20 @@
                 nodes.push(node);
                 // Set selection callback
                 node.elem.addEventListener("mousedown", ()=>selectNode(node));
-
+                // Deselect as our callback
+                node.deletedCallback = ()=>{deselectNode()};
+                
                 return node;
             }
             
             // Create oscillator (We set destination to our processor)
             createNode("osc", {oscType:"sawtooth"});
             // Create a demo plugin
-            let pos = {}; pos.x = 300; pos.y = 0;
-            createNode("effect", {position:pos});
             // Set our current plugin
-            pos.x = 600;
+            let pos = {}; pos.x = 300; pos.y = 0;
             currentPlugin = createNode("effect", {position:pos});
             // Create a destination
-            pos.x = 900;
+            pos.x = 600;
             createNode("dest", {position:pos});
 
             // We can connect them manually

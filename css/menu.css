@@ -1,12 +1,13 @@
 #menu > div, #menu > a, #create > a, #create > div {
     display: block;
     float:left;
-    overflow: hidden;
     color:white;
     height: 100%;
 }
 #create {
     width: fit-content;
+    padding-left:10px;
+    text-decoration: none;  
 }
 #plus_svg {
     width:40px;
@@ -22,4 +23,20 @@
 }
 .menu_lowered {
     margin-top: 10px;
+}
+#create:hover > #add_node {
+    display:block;
+    height:auto;
+}
+#add_node {
+    padding:15px;margin: 0;
+    background-color: #333;
+    z-index: 999;
+    display: none;
+    list-style-type: none;
+}
+#add_node li {
+    border-bottom: 2px solid black;
+    padding-left: 5px;
+    display: block;  
 }

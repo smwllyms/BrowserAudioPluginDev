@@ -26,6 +26,11 @@ export default class AudioNode {
         this.grabber = document.createElement("div");
         this.grabber.classList += "grabber";
         this.elem.appendChild(this.grabber);
+        // Add x
+        this.exitBtn = document.createElement("div");
+        this.exitBtn.classList += "exit_btn";
+        this.exitBtn.addEventListener("click", ()=>this.deleteNode(this));
+        this.grabber.appendChild(this.exitBtn);
 
         // Add label
         this.title = document.createElement("p");
@@ -60,6 +65,7 @@ export default class AudioNode {
 
         // Add to parent elem
         parentDOM.appendChild(this.elem);
+        this.parentDOM = parentDOM;
         let me = this;
 
         // Allow for movement
@@ -92,10 +98,6 @@ export default class AudioNode {
                 this.recalculatePos();
             }
         })
-
-        // Port functionality
-        this.connectedTo = [];
-        this.connectedFrom = [];
         // We are creating a connection
         this.portOut.addEventListener("mousedown", (e)=>{
             let line = document.elementFromPoint(e.clientX, e.clientY);
@@ -213,10 +215,14 @@ export default class AudioNode {
             default: break;
         }
 
-        if (myNode && !node.connectedFrom.includes(this)){
+        // Check if a connection exists
+        let flag = false;
+        this.connections.forEach((conn)=>{
+            if (conn.connection[1] == node) flag = true; 
+        });
+
+        if (myNode && !flag){
             myNode.connect(node.processor);
-            this.connectedTo.push(node);
-            node.connectedFrom.push(this);
             connectArrow.connection = [this, node];
             this.connections.push(connectArrow);
             node.connections.push(connectArrow);
@@ -227,36 +233,25 @@ export default class AudioNode {
 
     disconnectNode(connectArrow) {
         let node = connectArrow.connection[1];
+        let me = connectArrow.connection[0];
         if (node) {
-            let myNode;
-            switch (this.metaType) {
+            let myNode = null;
+            switch (me.metaType) {
                 case "osc":
-                    myNode = this.gainNode;
+                    myNode = me.gainNode;
                     break;
                 case "effect":
-                    myNode = this.processor;
+                    myNode = me.processor;
                     break;
                 default: break;
             }
 
             if (myNode) {
                 myNode.disconnect(node.processor);
-                this.connectedTo.splice(node, 1);
-                node.connectedFrom.splice(this, 1);
                 connectArrow.movingState = "idle";
-                this.connections.forEach((c)=>{
-                    if (c == connectArrow) {
-                        c = null;
-                    }
-                })
-                this.connections.filter(n=>n);
-                node.connections.forEach((c)=>{
-                    if (c == connectArrow) {
-                        c = null;
-                    }
-                })
-                node.connections.filter(n=>n);
-                this.portOut.removeChild(connectArrow);
+                me.connections = me.connections.filter(n=>n!=connectArrow);
+                node.connections = node.connections.filter(n=>n!=connectArrow);
+                me.portOut.removeChild(connectArrow);
                 connectArrow = null;
             }
         }
@@ -293,5 +288,14 @@ export default class AudioNode {
     refreshGUI() {
         let y = this.elem.getBoundingClientRect().height;
         this.ports.style.marginTop = (-y/2 + 5) + "px";
+    }
+
+    deleteNode(me) {
+        me.connections.forEach((conn)=>{
+            this.disconnectNode(conn);
+        });
+        me.parentDOM.removeChild(me.elem);
+        if (me.deletedCallback)
+            me.deletedCallback();
     }
 }

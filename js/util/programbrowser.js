@@ -1,5 +1,13 @@
 export default class ProgramBrowser {
 
+    var_declarations = [
+        "int", "float", "double", "string", "String"
+    ]
+
+    function_declarations = [
+        "void"
+    ]
+
     constructor(callback, btn, fn, args, out) {
         // Logs string s to output textarea
         const myLog = function(s) {
@@ -27,11 +35,32 @@ export default class ProgramBrowser {
             });
             // Get the user function string
             let func = fn.value;
+            // Convert to JS (ish)
+            // remove variable declarations
+            this.var_declarations.forEach((dec)=>{
+                func = func.replaceAll(dec, "var");
+            });
+            // remove function declarations
+            this.function_declarations.forEach((dec)=>{
+                func = func.replaceAll(dec, "function");
+            });
             // Replace all calls to console.log with our log function
             if (out)
                 func = func.replaceAll("console.log(", "myLog(");
+            // Eliminate array declarations and pointer variables
+            func = func.replaceAll("[]", "");
+            const re1 = /function\s*[A-Za-z0-9]*\s*\([A-Za-z0-9\s,\*]*\)/ig;
+            let found = func.match(re1);
+            if (found) {
+                found.forEach((term)=>{
+                    let fixed = term.replaceAll("*", "").replaceAll("var", "");
+                    func = func.replaceAll(term, fixed);
+                })
+            }
             // Append it to our main function string
             s += func;
+            // We need to call main process method
+            s += "process(inputs, outputs);";
             try {
                 // Log result
                 // myLog(new Function(s)());
