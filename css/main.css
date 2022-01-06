@@ -11,9 +11,14 @@ body {
     background-color: cyan;
     text-align: center;
     height:70%;
+    padding:35px
 }
 #menu {
     height:10%;
     width:100%;
     background-color: darkslategray;
+}
+#guiPreview {
+    padding:15px;
+    overflow: scroll;
 }

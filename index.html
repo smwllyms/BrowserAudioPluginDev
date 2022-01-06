@@ -25,10 +25,13 @@
 
     </div>
     <div id="code">
-        <div id="info">
-            <h2 style="color: gray;margin-right: 20px;">Selected: </h2> <h2 id="prog_name">Program</h2>
-        </div>
         <textarea id="user_func"></textarea>
+        <div id="node_settings">
+            <div id="info">
+                <h2 style="color: gray;margin-right: 20px;">Selected: </h2> <h2 id="prog_name">Program</h2>
+                <div id="guiPreview"></div>
+            </div>
+        </div>
         <br/>
         <div class="btn_ctr">
             <a id="compile" class="btn">Compile</a>
@@ -42,9 +45,14 @@
     // Some globals
     let currentPlugin, audioctx, func_text, name_text, createNode;
 
-    const loadDemo = function(plugin) {
+    const loadDemo = function() {
         // Default fill
-        func_text.value = "void process(float *inputs, float *outputs)\n\
+        func_text.value = "int num = 0;\n\
+float half(float val)\n\
+{\n\
+    return val / 2.0;\n\
+}\n\
+void process(float *inputs, float *outputs)\n\
 {\n\
     // Number of Inputs\n\
     for (int i = 0; i < inputs.length; i++)\n\
@@ -63,7 +71,10 @@
         }\n\
     }\n\
 }\n";
+
     }
+
+    const guiPreviewElem = document.getElementById("guiPreview");
 
     const deselectNode = function() {
         if (!currentPlugin) return;
@@ -71,6 +82,7 @@
             currentPlugin.setProgram(func_text.value);
         }
         currentPlugin.elem.classList.remove("selected_node");
+        guiPreviewElem.removeChild(currentPlugin.guiPreview);
         name_text.innerText = "None";
         currentPlugin = null;
     }
@@ -84,6 +96,7 @@
         else func_text.value = "";
         name_text.innerText = node.title.innerText;
         currentPlugin = node;
+        guiPreviewElem.appendChild(currentPlugin.guiPreview);
     }
 
     function main() {
@@ -108,7 +121,70 @@
                 // Set our processors user func
                 let msg = {};
                 msg.type = "code";
-                msg.data = f;
+                // Now we need to parse functions
+
+                // Step 1 match functions
+                let functions = [];
+                let matches = [...f.matchAll("function")];
+                let len = f.length;
+                for (var i = 0; i < matches.length; i++)
+                {
+                    let match = matches[i];
+
+                    let endIndex;
+                    // Find next func or end of program
+                    if (i < matches.length - 1)
+                        endIndex = matches[i+1].index;
+                    else
+                        endIndex = len - 1;
+                    // Find previous bracket
+                    while (endIndex > 0 && f[endIndex] != '}') 
+                        endIndex--;
+                    // Add function
+                    let newF = f.substring(match.index, endIndex+1);
+                    functions.push(newF);
+                }
+
+                let fNoFuncs = f;
+                functions.forEach(func=>{fNoFuncs = fNoFuncs.replace(func, "");});
+                let varDecs = fNoFuncs.replace("\n","").split(';');
+                let initFunc = ""; 
+                varDecs.forEach(vd=>{
+                    vd = vd.replace("var ", "context.");
+                    initFunc += vd + ";";
+                });
+                // let sb = "";
+                // varDecs.forEach(vd=>{
+                //     vd = vd.replace("\n", "");
+                //     if (sb.length > 0)
+                //         sb += ",{" + vd + "}"
+                // });
+                let ctxStr = "context,";
+                let procFunc = null;
+                functions.forEach(func=>{
+                    func = [func.slice(0, func.indexOf("(") + 1), ctxStr, func.slice(func.indexOf("(") + 1, 
+                        func.indexOf("{") + 1), "with (context)"
+                        + func.slice(func.indexOf("{")), "}"].join('');
+
+                    // Is this the proc func
+                    let name = func.substring(func.indexOf("function ") + "function ".length, func.indexOf("(")).trim();
+                    console.log(name);
+                    if (name === "process")
+                        procFunc = func;
+                });
+
+                if (procFunc == null)
+                {
+                    return;
+                }
+                
+                // We need to call main process method
+                procFunc += "process(context, inputs, outputs);";
+                console.log(procFunc);
+                // msg.data = f;
+                msg.data = {};
+                msg.data.procFunc = procFunc;
+                msg.data.initFunc = initFunc;
                 // Compile
                 currentPlugin.processor.port.postMessage(msg);
             }
@@ -152,7 +228,7 @@
                 node.elem.addEventListener("mousedown", ()=>selectNode(node));
                 // Deselect as our callback
                 node.deletedCallback = ()=>{deselectNode()};
-                
+                selectNode(node);
                 return node;
             }
             
@@ -161,14 +237,13 @@
             // Create a demo plugin
             // Set our current plugin
             let pos = {}; pos.x = 300; pos.y = 0;
-            currentPlugin = createNode("effect", {position:pos});
+            createNode("effect", {position:pos});
+            loadDemo();
             // Create a destination
             pos.x = 600;
             createNode("dest", {position:pos});
 
             // We can connect them manually
-            selectNode(currentPlugin);
-            loadDemo(currentPlugin);
             callback(user_func.value);
         })});
     }

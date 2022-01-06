@@ -35,15 +35,65 @@ export default class ProgramBrowser {
             });
             // Get the user function string
             let func = fn.value;
+            // ------------------------
             // Convert to JS (ish)
+            // remove function declarations
+            let firstIdx = 0;
+            // this.function_declarations.forEach((dec)=>{
+            //     func = func.replaceAll(dec, "function");
+            // });
+            const isSpace = function (c) {
+                return c == ' ' || c == '\t' || c == '\n';
+            }
+            while (firstIdx < func.length)
+            {
+                // Find a bracket (guarunteed to be func)
+                while (firstIdx < func.length && func[firstIdx] != '{') firstIdx++; 
+                // If we are at the end quit
+                if (firstIdx == func.length)
+                    break;
+                // Find function def type (i.e. float, void)
+                // First find first parenthese
+                while (func[firstIdx] != '(') firstIdx--;
+                // Go to function name
+                while (isSpace(func[firstIdx])) 
+                    firstIdx--;
+                // Skip through name
+                while (!isSpace(func[firstIdx]))  
+                    firstIdx--;     
+                // Go to function def type (skip space)
+                while (isSpace(func[firstIdx]))  
+                    firstIdx--;
+                let endDefType = firstIdx + 1;
+                // Skip through name
+                while (!isSpace(func[firstIdx]))  
+                    firstIdx--;    
+                // Replace deftype with 'function'
+                firstIdx++;
+                func = [func.slice(0, firstIdx), "function", func.slice(endDefType)].join('');
+                // Wait until we have reached the same level of brackets
+                let level = 0;
+                let lastIdx = firstIdx;
+                while (lastIdx < func.length)
+                {
+                    if (func[lastIdx] == '{')
+                        level++;
+                    else if (func[lastIdx] == '}')
+                    {
+                        level--;
+                        if (level == 0)
+                            break;
+                    }
+                    lastIdx++;
+                }
+                // We are now past function.
+                firstIdx = lastIdx;
+            }
             // remove variable declarations
             this.var_declarations.forEach((dec)=>{
                 func = func.replaceAll(dec, "var");
             });
-            // remove function declarations
-            this.function_declarations.forEach((dec)=>{
-                func = func.replaceAll(dec, "function");
-            });
+            // ------------------------
             // Replace all calls to console.log with our log function
             if (out)
                 func = func.replaceAll("console.log(", "myLog(");
@@ -59,8 +109,6 @@ export default class ProgramBrowser {
             }
             // Append it to our main function string
             s += func;
-            // We need to call main process method
-            s += "process(inputs, outputs);";
             try {
                 // Log result
                 // myLog(new Function(s)());

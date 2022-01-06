@@ -9,8 +9,15 @@ class AudioProcessor extends AudioWorkletProcessor {
 
       if (msg.type === "code") {
         try {
-          let args = ['inputs', 'outputs'];
-          this.user_func = new Function(args, msg.data);
+          this.context = {};
+          // Create the init function
+          console.log("1");
+          let args = ['context'];
+          new Function(args, msg.data.initFunc)(this.context);
+          console.log(this.context.num);
+          // Create the proc function
+          args = ['context', 'inputs', 'outputs'];
+          this.user_func = new Function(args, msg.data.procFunc);
         }
         catch {}
       }
@@ -29,7 +36,7 @@ class AudioProcessor extends AudioWorkletProcessor {
         output[0].set(input[0]);
       }
       else {
-          this.user_func(inputs, outputs);
+          this.user_func(this.context, inputs, outputs);
       }
   
       // Process only while there are active inputs.

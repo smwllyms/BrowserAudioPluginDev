@@ -1,21 +1,27 @@
 #user_func {
-    width:90%;
+    width:40%;
     font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-    padding:0; border: 0;
+    padding:10px; border: 0;
     box-sizing: content-box;
     height:70%;
     vertical-align: top;
-    white-space: nowrap;
+    float: left;
+}
+#node_settings {
+    background-color: white;
+    height: 70%;
+    float: right;
+    width: 40%;
+    padding: 10px;
 }
 .btn_ctr {
-    height:20%;
+    height:40px;
     width: 100%;
     display: flex;
     justify-content: space-evenly;
     flex-direction: row;
 }
 .btn {
-    flex: 1 1 10em;
     color:white;
     cursor: pointer;
     display: flex;
@@ -23,6 +29,7 @@
     justify-content: center;
     flex-wrap: wrap;
     width: 50%;
+    vertical-align: bottom;
 }
 #info {
     height:10%;

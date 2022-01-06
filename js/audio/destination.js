@@ -1,8 +1,8 @@
 import AudioNode from "./audionode.js";
 
 export class DestinationNode extends AudioNode {
-    constructor(parentDOM, context) {
-        super(parentDOM, context, "Destination");
+    constructor(parentDOM, context, previewDOM) {
+        super(parentDOM, context, "Destination", previewDOM);
 
         this.metaType = "dest";
 

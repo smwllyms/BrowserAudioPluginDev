@@ -110,6 +110,58 @@ export default class AudioNode {
 
         // Audio Context
         this.ctx = context;
+        
+        // Create gui preview
+        this.guiPreview = document.createElement("div");
+        let gui = this.guiPreview;
+        gui.style.width = "400px";
+        gui.style.height = "100px";
+        gui.style.backgroundColor = "#ddbb44";
+        gui.style.backgroundImage = "";
+        gui.isDown = false;
+        gui.clickPending = false;
+        gui.resizeMode = 0;
+        let grace = 5;
+        document.addEventListener("mousemove", e=>{
+            if (gui.isDown) {
+                let rect = gui.getBoundingClientRect();
+                if (e.target == gui) {
+                    if (gui.clickPending) {
+                        let w = (rect.width - (e.pageX - rect.x) < grace);
+                        let h = (rect.height - (e.clientY - rect.y) < grace);
+                        if (w && h) {
+                            gui.resizeMode = 3;
+                        }
+                        else if (w) {
+                            gui.resizeMode = 1;
+                        }
+                        else if (h) {
+                            gui.resizeMode = 2;
+                        }
+                        gui.clickPending = false;
+                    }
+                }
+                if (gui.resizeMode == 3) {
+                    gui.style.width = (e.pageX - rect.x) + "px";
+                    gui.style.height = (e.clientY - rect.y) + "px";
+                }
+                else if (gui.resizeMode == 1) {
+                    gui.style.width = (e.pageX - rect.x) + "px";
+                }
+                else if (gui.resizeMode == 2) {
+                    gui.style.height = (e.clientY - rect.y) + "px";
+                }
+                else {
+                }
+            }
+        });
+        document.addEventListener("mousedown", (e)=>{
+            if (e.target == gui){
+                gui.isDown=true;
+                gui.clickPending=true;
+            }
+        });
+        document.addEventListener("mouseup", ()=>{gui.isDown=false;gui.resizeMode=0});
 
         // Set our initial port positions
         // Get our first positions
