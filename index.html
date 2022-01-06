@@ -7,19 +7,28 @@
     <link href="./css/main.css" rel="stylesheet">
     <link href="./css/audionode.css" rel="stylesheet">
     <link href="./css/browserprogram.css" rel="stylesheet">
+    <link href="./css/guipreview.css" rel="stylesheet">
     <link href="./css/menu.css" rel="stylesheet">
 </head>
 <body>
     <div id="menu">
-        <a id="site_title">AudioPluginDev</a>
-        <a id="create" href="#create_node">
+        <div id="site_title">AudioPluginDev</div>
+        <div id="create" href="#create_node">
             <div id="plus_svg"></div>
-            <div class="menu_lowered">Add a node...</div>
-            <ul id="add_node">
-                <li onclick="createNode('osc')">Oscillator</li>
-                <li onclick="createNode('effect')">Effect Processor</li>
-            </ul>
-        </a>
+            <div class="menu_lowered"><span>Add a node...</span>
+                <ul id="add_node">
+                    <li id="oscTypes">
+                        Oscillator
+                        <ul>
+                            <li onclick="createNode('osc', {'oscType':'sine'})">Sine</li>
+                            <li onclick="createNode('osc', {'oscType':'sawtooth'})">Saw</li>
+                            <li onclick="createNode('osc', {'oscType':'square'})">Square</li>
+                        </ul>
+                    </li>
+                    <li onclick="createNode('effect')">Effect</li>
+                </ul>
+            </div>
+        </div>
     </div>
     <div id="oscillators">
 
@@ -30,6 +39,14 @@
             <div id="info">
                 <h2 style="color: gray;margin-right: 20px;">Selected: </h2> <h2 id="prog_name">Program</h2>
                 <div id="guiPreview"></div>
+                <div id="guicomponents">
+                    <ul>
+                        <li><div><p>Knob</p></div></li>
+                        <li><div><p>Label</p></div></li>
+                        <li><div><p>Button</p></div></li>
+                        <li><div><p>Text Edit</p></div></li>
+                    </ul>
+                </div>
             </div>
         </div>
         <br/>
@@ -82,7 +99,8 @@ void process(float *inputs, float *outputs)\n\
             currentPlugin.setProgram(func_text.value);
         }
         currentPlugin.elem.classList.remove("selected_node");
-        guiPreviewElem.removeChild(currentPlugin.guiPreview);
+        if (currentPlugin.metaType == "effect")
+            guiPreviewElem.removeChild(currentPlugin.guiPreview);
         name_text.innerText = "None";
         currentPlugin = null;
     }
@@ -96,7 +114,9 @@ void process(float *inputs, float *outputs)\n\
         else func_text.value = "";
         name_text.innerText = node.title.innerText;
         currentPlugin = node;
-        guiPreviewElem.appendChild(currentPlugin.guiPreview);
+        // Only fx get preview
+        if (currentPlugin.metaType == "effect")
+            guiPreviewElem.appendChild(currentPlugin.guiPreview);
     }
 
     function main() {

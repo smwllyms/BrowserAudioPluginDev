@@ -16,7 +16,8 @@
 }
 .btn_ctr {
     height:40px;
-    width: 100%;
+    width: 40%;
+    padding: 10px;
     display: flex;
     justify-content: space-evenly;
     flex-direction: row;

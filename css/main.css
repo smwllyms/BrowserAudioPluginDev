@@ -5,20 +5,22 @@ body {
 }
 #oscillators {
     background-color: beige;
-    height:20%;
+    height:200px;
 }
 #code {
     background-color: cyan;
     text-align: center;
-    height:70%;
-    padding:35px
+    overflow: auto;
+    float:left;
+    width: 100%;
+    height:calc(100vh - 250px);
+    padding: 20px 60px;box-sizing: border-box
 }
 #menu {
-    height:10%;
+    height:50px;
     width:100%;
     background-color: darkslategray;
+    z-index: 9999;
+    position:sticky
 }
-#guiPreview {
-    padding:15px;
-    overflow: scroll;
-}
+

@@ -1,42 +1,37 @@
-#menu > div, #menu > a, #create > a, #create > div {
-    display: block;
-    float:left;
+#menu > div {
+    float: left;
+    height: 100%;
+    margin-left: 50px;
+    font-size: 20px;
+    line-height: 50px;
     color:white;
-    height: 100%;
 }
-#create {
-    width: fit-content;
-    padding-left:10px;
-    text-decoration: none;  
+.menu_lowered span, #add_node li {
+    padding-left: 10px;
+    padding-right: 10px;
 }
-#plus_svg {
-    width:40px;
-    text-align: center;
-    background:url("../svg/plus.svg");
-    background-repeat: no-repeat;
-    background-size: 40px;
-    height: 100%;
-}
-#site_title {
-    font-size: 30px;
-    margin-right: 20px;
-}
-.menu_lowered {
-    margin-top: 10px;
-}
-#create:hover > #add_node {
-    display:block;
-    height:auto;
-}
-#add_node {
-    padding:15px;margin: 0;
+.menu_lowered:hover {
     background-color: #333;
-    z-index: 999;
+}
+#add_node, #add_node ul {
     display: none;
+    margin: 0;
+    padding: 0;
+    background-color: darkslategray;
     list-style-type: none;
 }
-#add_node li {
-    border-bottom: 2px solid black;
-    padding-left: 5px;
-    display: block;  
+.menu_lowered:hover #add_node, #oscTypes:hover ul {
+    display: block;
+}
+#oscTypes li {
+    background-color: slategray;
+}
+#oscTypes ul {
+    position: absolute;
+    margin-left:129px;
+    margin-top:-50px;
+}
+#add_node li:hover {
+    cursor: pointer;
+    background-color: #333;
 }
